@@ -86,7 +86,9 @@ from helpers.aesthetics import load_aesthetics_model
 def Root():
     return locals()
 root = Root()
+embedding_opt = {}
 root = SimpleNamespace(**root)
+embedding_opt = SimpleNamespace(**embedding_opt)
 
 root.models_path = "models" #@param {type:"string"}
 root.output_path = "output" #@param {type:"string"}
@@ -102,7 +104,12 @@ root.custom_checkpoint_path = "" #@param {type:"string"}
 root.half_precision = True
 
 root.models_path, root.output_path = get_model_output_paths(root)
-root.model, root.device = load_model(root)
+
+embedding_opt.enabled = False
+embedding_opt.aesthetic_steps = 5 #@param {type:"number"}
+embedding_opt.aesthetic_lr = 0.0001 #@param {type:"float"}
+embedding_opt.aesthetic_embedding = 'aesthetic_embeddings/fantasy.pt'
+root.model, root.device = load_model(root, embedding_opt)
 
 # %%
 # !! {"metadata":{

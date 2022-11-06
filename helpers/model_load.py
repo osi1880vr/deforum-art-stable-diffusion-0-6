@@ -24,7 +24,7 @@ def make_linear_decode(model_version, device='cuda:0'):
 
     return linear_decode
 
-def load_model(root):
+def load_model(root, embedding_opt):
 
     import requests
     import torch
@@ -180,7 +180,7 @@ def load_model(root):
         except:
             print("..could not verify model integrity")
 
-    def load_model_from_config(config, ckpt, verbose=False, device='cuda', half_precision=True,print_flag=False):
+    def load_model_from_config(config, ckpt, embedding_opt, verbose=False, device='cuda', half_precision=True,print_flag=False):
         map_location = "cuda" # ["cpu", "cuda"]
         print(f"..loading model")
         pl_sd = torch.load(ckpt, map_location=map_location)
@@ -207,6 +207,14 @@ def load_model(root):
 
     if load_on_run_all and ckpt_valid:
         local_config = OmegaConf.load(f"{ckpt_config_path}")
+
+        if embedding_opt.enabled:
+            local_config.model.params.cond_stage_config.params.T = embedding_opt.aesthetic_steps
+            local_config.model.params.cond_stage_config.params.lr = embedding_opt.aesthetic_lr
+            local_config.model.params.cond_stage_config.params.aesthetic_embedding_path = (
+                embedding_opt.aesthetic_embedding
+            )
+
         model = load_model_from_config(local_config, f"{ckpt_path}", half_precision=half_precision)
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         model = model.to(device)
