@@ -1,5 +1,6 @@
 import os
 import torch
+import torch.nn as nn
 
 # Decodes the image without passing through the upscaler. The resulting image will be the same size as the latent
 # Thanks to Kevin Turner (https://github.com/keturn) we have a shortcut to look at the decoded image!
@@ -218,6 +219,11 @@ def load_model(root, embedding_opt):
         model = load_model_from_config(local_config, f"{ckpt_path}", half_precision=half_precision)
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         model = model.to(device)
+
+    # to fix colormatch when used in combination with embedding
+    for m in model.modules():
+        if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
+            m._orig_padding_mode = m.padding_mode
 
     autoencoder_version = "sd-v1" #TODO this will be different for different models
     model.linear_decode = make_linear_decode(autoencoder_version, device)
